@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>72-Hour Financial Reset Quiz</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 2em auto; padding: 0 1em; }
+    h1, h2 { color: #2D7287; }
+    .step { margin-bottom: 2em; }
+    .options label { display: block; margin: 0.5em 0; }
+    button { background: #51E2C2; border: none; color: white; padding: 0.75em 1.5em; border-radius: 0.25em; cursor: pointer; }
+    button[disabled] { background: #ccc; cursor: not-allowed; }
+    #result { text-align: center; }
+    input[type="email"] { width: 100%; padding: 0.5em; margin: 0.5em 0; border: 1px solid #ccc; border-radius: 0.25em; }
+  </style>
+</head>
+<body>
+  <h1>What if 72 hours could change your finances?</h1>
+  <p>Answer a few quick questions to find out how much you could shift back into your pocket.</p>
+  <div id="quiz"></div>
+  <script>
+    const quiz = {
+      steps: [
+        {
+          id: "q_refund",
+          type: "single_choice",
+          question: "How big was your last tax refund?",
+          options: [
+            { value: "under_1000", label: "Under $1,000", score: 117 },
+            { value: "1000_2000", label: "$1,000–$2,000", score: 226 },
+            { value: "2000_3000", label: "$2,000–$3,000", score: 348 },
+            { value: "over_3000", label: "Over $3,000", score: 502 }
+          ]
+        },
+        {
+          id: "q_bills",
+          type: "multi_choice",
+          emoji: "📺",
+          question: "Which of these bills do you currently pay? (Select all that apply)",
+          options: [
+            { value: "internet", label: "Internet", score: 23 },
+            { value: "cable_tv", label: "Cable TV", score: 19 },
+            { value: "phone", label: "Phone", score: 22 },
+            { value: "utilities", label: "Utilities", score: 13 }
+          ]
+        },
+        {
+          id: "q_debt",
+          type: "single_choice",
+          question: "How much personal debt are you currently managing?",
+          options: [
+            { value: "under_5000", label: "Under $5,000", score: 27 },
+            { value: "5000_15000", label: "$5,000–$15,000", score: 51 },
+            { value: "over_15000", label: "Over $15,000", score: 76 },
+            { value: "none", label: "None", score: 0 }
+          ]
+        },
+        {
+          id: "q_homebiz",
+          type: "single_choice",
+          question: "Would you be open to starting a home-based business?",
+          options: [
+            { value: "yes", label: "Yes", score: 213 },
+            { value: "maybe", label: "Maybe", score: 137 },
+            { value: "no", label: "No", score: 0 }
+          ]
+        }
+      ],
+      result: {
+        headline: "Congrats!!",
+        body: "Based on your answers, you could unlock up to ${{amount}} every month!",
+        cta_label: "See What’s Included in the 72-Hour Challenge",
+        cta_url: "https://your-landing-page-url.com",
+        collect_email: true
+      }
+    };
+
+    let currentStep = 0;
+    let totalScore = 0;
+
+    function renderStep() {
+      const container = document.getElementById('quiz');
+      container.innerHTML = '';
+      if (currentStep < quiz.steps.length) {
+        const step = quiz.steps[currentStep];
+        const stepDiv = document.createElement('div'); stepDiv.className = 'step';
+        const q = document.createElement('h2');
+        q.textContent = (step.emoji ? step.emoji + ' ' : '') + step.question;
+        stepDiv.appendChild(q);
+
+        const optsDiv = document.createElement('div'); optsDiv.className = 'options';
+        step.options.forEach((opt, i) => {
+          const label = document.createElement('label');
+          const input = document.createElement('input');
+          input.type = step.type === 'multi_choice' ? 'checkbox' : 'radio';
+          input.name = step.id;
+          input.value = i;
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(' ' + opt.label));
+          optsDiv.appendChild(label);
+        });
+        stepDiv.appendChild(optsDiv);
+
+        const btn = document.createElement('button');
+        btn.textContent = 'Continue';
+        btn.onclick = () => {
+          // collect answers
+          const inputs = Array.from(optsDiv.querySelectorAll('input'));
+          if (step.type === 'single_choice') {
+            const selected = inputs.find(i => i.checked);
+            if (!selected) return alert('Please select one option.');
+            totalScore += step.options[selected.value].score;
+          } else {
+            const checked = inputs.filter(i => i.checked);
+            if (checked.length === 0) return alert('Please select at least one.');
+            checked.forEach(ch => {
+              totalScore += step.options[ch.value].score;
+            });
+          }
+          currentStep++;
+          renderStep();
+        };
+        stepDiv.appendChild(btn);
+        container.appendChild(stepDiv);
+
+      } else {
+        // result
+        const res = document.createElement('div'); res.id = 'result';
+        const h = document.createElement('h2'); h.textContent = quiz.result.headline;
+        res.appendChild(h);
+        const p = document.createElement('p');
+        p.textContent = quiz.result.body.replace('{{amount}}', totalScore);
+        res.appendChild(p);
+        if (quiz.result.collect_email) {
+          const email = document.createElement('input');
+          email.type = 'email'; email.placeholder = 'Enter your email';
+          res.appendChild(email);
+        }
+        const cta = document.createElement('button');
+        cta.textContent = quiz.result.cta_label;
+        cta.onclick = () => {
+          const url = quiz.result.cta_url + (quiz.result.collect_email ? '?email=' + encodeURIComponent(document.querySelector('#result input').value) : '');
+          window.location.href = url;
+        };
+        res.appendChild(cta);
+        container.appendChild(res);
+      }
+    }
+
+    renderStep();
+  </script>
+</body>
+</html>
